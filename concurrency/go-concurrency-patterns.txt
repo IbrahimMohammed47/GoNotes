@@ -1,0 +1,88 @@
+Google I/O 2012 - Go Concurency Patterns : https://www.youtube.com/watch?v=f6kdp27TYZs
+
+- General Notes 
+  - in some cases you may find yourself recursively calling a function that launches goroutines, although goroutines are cheap, this might be dangerous if it makes millions of goroutines, because
+    recursions mean that caller goroutine stack will set in memory, and propably waiting for its children callee goroutines to finish to take data from them. an alternative to this approach is have 
+    a master-workers design, where the master controls a pool of goroutines whom whenever are called and done processing stuff, can then report the processed data through channels that have active 	   	consumers(maybe the master itself)
+  - select statement can be used to shape different data flows
+    - Fan-in    m channels to 1 channel
+    - Fan-out   1 channel to m channels
+    - Turn-out  m channels to m channels
+
+
+
+- Fan-in using `select` 
+  - base: `select` statement in Go provides another way to handle multiple channels. It's like a switch, but each case is a communication.
+  - def: a function that takes multiple receive-only channels, makes a new channel, and concurrently multiplexes all the input channels through that single new channel.
+  - ex:
+    func fanin(output chan<- int, input1, input2 <-chan int) {
+      go func(){
+        for {
+          select{
+          case msg, ok := <-input1: 
+            if ok  {output<- msg} else {input1 = nil} 
+          case msg, ok := <-input2: 
+            if ok  {output<- msg} else {input2 = nil}
+          }
+          if input1 == nil && input2 == nil {
+            close(output)                     // or maybe you wanna signal fisrt
+            break
+          }
+        }
+      }()
+    }
+
+
+
+- Fan-out using `select` 
+  - def: a function that distributes data from one channel into multiple channels based on availability
+  - ex:
+    func fanout(input <-chan int, output1, output2 chan<- int) {
+      go func(){
+        for msg := range input {  // this runs forever until input is closed
+          select{
+          case output1<- msg: time.Sleep(time.Millisecond*10)  // this small sleep is prevent congestion in the input buffer, not sure if it's a good idea
+          case output2<- msg: time.Sleep(time.Millisecond*10)
+          }				
+        }
+        // you may want to close output channels here
+      }()
+    }
+
+
+
+- Generator :-
+  - def: a function that makes a channel, (send data through it in a goroutine), and returns that channel
+  - ex: 
+    func generator(msg int) <-chan int {
+      c := make(chan int)
+      go func() { // We launch the goroutine from inside the function.
+          for i := 0; ; i++ {
+            c <- i // this is blocking
+          }
+      }()
+      return c // Return the channel to the caller.
+    }
+
+
+
+- Delegator (Reverse-channel)
+  - base: Since channels are first-class variables, they can be sent over other channels
+  - def:  a function that takes a channel c and data, 
+          it creates a new call-back channel cb & encapsulates it with the data inside a new msg, 
+          it sends the msg over c, 
+          and it blocks on cb waiting for its data to be processed
+  - note: this function knows nothing about the receivers of "chan<- request", in fact it takes that channel as an argument, it doesn't know how many workers/goroutines will process its data and call it back, and similarly, the workers know nothing about the requesters, it only has a channel that it can send the data it processes over
+  - ex: 
+    type request struct {
+      data int
+      revC chan int
+    }  
+    func delegator(work chan<- request, data int) (result int) {
+      c := make(chan int)
+      work <- request{data, c}
+      result = <- c
+      return
+    }
+
+

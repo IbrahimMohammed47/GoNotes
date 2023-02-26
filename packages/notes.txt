@@ -1,0 +1,71 @@
+- Packages have no cyclic dependencies
+- It is important to develop software that is maintainable, reusable, and modular.
+- Code organization:
+  functions ---> source files(.go) ---> packages
+
+- A package is essentially a directory inside your workspace that contains one or more Go source files, which 
+  is used for grouping code that performs a task. It exposes only the necessary parts in order for those using 
+  your package to get a job done. The package concept is akin to using directories to organize files on a computer.
+
+                         +----> Directory
+                         |
+- Package structure  ----+----> contains one or more files
+                         |
+                         +----> related code 
+
+- Naming
+  - The name of your package is significant. It represents what your package contains and identifies its purpose. 
+    You can think of a package name as self-documentation. Careful consideration needs to go into naming a package. 
+    The name of the package should be short and concise. It should not be verbose. Simple nouns are often chosen for 
+    a package name.
+  - package names should be all lowercase with no underscores. 
+  - Don't use camel case or snake case styling. 
+  - Abbreviations are encouraged, just as long as they are familiar or common in the programming community. 
+  - Avoid package names such as misc, util, common, or data (avoid generic package names)
+
+- Rules
+  - All the functions, types, and variables that are defined in the Go source file are accessible within that package(code is visible within the package).
+  - If a function, type, variable, and so on starts with an uppercase letter, it is exportable,
+  - if it starts with a lowercase letter, it is unexportable.
+  - no access modifiers (public,protected,private..) to be concerned with in Go.
+
+- GOROOT and GOPATH
+  - The Go compiler needs a way to know how to find our source files (packages) so that the compiler can build and install them. 
+    The compiler utilizes two environmental variables for this job. $GOROOT and $GOPATH tell the Go compiler where to search for 
+    the locations of the Go packages listed by the import statement.
+  - $GOROOT is used to tell the Go compiler the location of the Go standard library packages. $GOROOT is specific to the 
+    Go standard library. It is what Go uses to determine where its standard library packages and tools are located.
+  - $GOPATH is the location for packages we create and third-party packages that we may have imported. At the command line, 
+    type the following code:
+    - Inside the $GOPATH file structure, there are three directories: bin, pkg, and src. The bin directory is the easiest to understand. 
+      This is where Go places the binaries or executables when you run the go install command. One of the main uses of the pkg directory 
+      is used by the compiler to store object files for the packages the Go compiler builds. This is to help with speeding up the compiling 
+      of programs. The src directory is the one we are most interested in understanding as it is the directory where we place our packages. 
+      This is the directory where we place files with the .go extension.
+      - For example, if we have a package located at $GOPATH/src/person/address/ and we want to use the address packages, 
+        we would need the following import statement: import "person/address"
+
+- Main Package
+  - The main package is a special package. There are two basic types of packages in Go: executable and non-executable. 
+    The main package is an executable package in Go. The main package requires there to be a main() function in its package. 
+    The main() function is the entry point for a Go executable. When you perform go build on the main package, it will 
+    compile the package and create a binary. The binary is created inside of the directory where the main package is located. 
+    The name of the binary will be the name of the folder it resides in
+
+
+- init()
+  - Each source file can have an init() function, but for now, we will look at the init function in the context of the main package.
+    When you start writing packages, you might need to provide some initialization (the init() function) for the package. The init() 
+    function is used to set up states or values. The init() function adds initialization logic for your package. Here are some examples 
+    of uses of the init() function:
+      - Setting database objects and connections
+      - The initialization of package variables
+      - Creating files
+      - Loading configuration data
+      - Verifying or repairing the program state
+  - The init() function requires the following pattern to be called:
+    - Imported packages are initialized first.
+    - Package-level variables are initialized.
+    - The package's init() function is called.
+    - main is executed.
+  - There can be more than one init() function in a package. This enables you to modularize your initialization for better code maintenance.

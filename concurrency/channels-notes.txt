@@ -1,0 +1,202 @@
+Analogy:
+  - Imagine several people have some nails to hammer into a wall. Each person has a different number of nails and a different 
+    area of the wall, but there is only one hammer. Each person uses the hammer for one nail, then passes the hammer to the next person, and so on. 
+    The person with the fewest nails will finish earlier but they will all share the same hammer; this is how Goroutines work.
+
+Communication Sequential Processes (CSP)
+  - Tony Hoare, 1978
+  - Each process is built for sequential execution
+  - Data is communicated between processes via channels. No shared state!
+  - Scale by adding more of the same
+
+
+Parallesim vs Concurrency:
+  - Concurrency
+    - is the composition of independently executing processes
+    - is about dealing with lots of things at once. 
+  - Parallelism
+    - is the simultaneous execution of (possibly related) computations. 
+    - is about doing lots of things at once.
+  - Concurrency doesn't imply parallelism, but it opens room for it (one single thread can be used to perform highly complex concurrent program, but we can add more processes to help effeciently)
+    So, if we get concurreny right, parallelism will be just a free variable (just add processes as you wish)
+  - Go provide tools that help model concurreny in your program in an effecient way 
+
+
+Goroutines (a bit like threads but they're much cheaper):
+  - Most of programming lags: use OS threads, OS threads are big, use a lot of memory(about 1MB of ram), take time to set
+    up by an app, therefore you need to be very economic when dealing with those (get help by thread pools for example)
+  - Golang (& few langs like Erlang): use Green threads(goroutines in Go), they are high-lvl abstractionsin runtime, 
+    a schedueler (belongs to golang) multiplexes those onto OS threads as required
+  - Goroutines are multiplexed onto OS threads as required
+  - when a goroutine blocks, that thread blocks but no other goroutines block
+  - Using Goroutines, Go allows multiple tasks to run at the same time (they are also called coroutines). These are routines (read tasks) that can co-run inside the same process but are totally concurrent.
+  - Goroutines do not share memory, which is why they are different from threads.
+  - they are just functions ! just preceed their calls with `go` keyword
+  - Go is not a parallel language, but concurrent, which means that Goroutines don't work in an independent manner, but each Goroutine is split into smaller parts and each Goroutine runs one of its subparts at a time.
+  - Closures danger: goroutines are essentially just functions called with go, this means closures work for goroutines too, which means a goroutine can access a variable from the function that wraps the goroutine function, this is really DANGEROUS !
+  - it is common to `go` anonymous funcs, in that case u have 2 options for passing data to those goroutines, 1st is by closure which is dangerous because the caller might race the callee goroutine if the 	 caller changed that data, and which will make the callee goroutine read wrong values, 2nd way is by passing the data as arguments to the anonoymous func, this way is safer because it gaurantees that
+    the callee goroutine will always get the data that the caller wanted to give it to at the moment it wanted to give it at.
+  - note: main function is executed as a goroutine too
+
+
+Waitgroup
+  - it's designed to synchronize multiple goroutines together
+  - use it for groups of goroutines to complete  // like using barrier in MPI, but for threads in a shared memory system
+  - wg.Wait(): works like a counting semaphore, it blocks the gouroutine that calls it until the wg counter drops back to 0 
+  - this is so important, imagine a dfs where you are recursively starting goroutines, and you want a parent to WAIT until its children are processed, you have to use Waitgroup in this case
+  - a common pattern is to defer wg.Done() like in the recursion example 		
+  - one common use of it is to make the `main` goroutine wait for other children goroutines, because if it doesn't, the program will terminate before those goroutines finish
+  - in many cases, especially task-ish programs (and unlike like webservers), waitgroups is the only way to know whether all your goroutines have finished their job
+
+Mutexes
+  - use sync.Mutex & sync.RWMutex to protect data access (generally code blocks)
+  - RWMutex is a reader/writer mutual exclusion lock. The lock can be held by an arbitrary number of readers or a single writer.
+
+
+GOMAXPROCS for Parallelism
+  - this controls the number of max OS threads that can be utilized by our app (hopefully concurrent one)
+  - It's a tuning parameter
+  - rules of thumb:
+    - one OS thread per processor core is a minumum (on my core i5 machine, i have 4 cores, set maxthreads = 4): go uses this configuration by default 
+    - don't make this too big (like > 100) because it adds maintenance overhead, takes memory, As a result this will slow down your program instead of boosting it
+    - it is a good practice to make tests to test your app with different values of this parameter so you get to know the best value to use in production, because it's a tuning parameter
+
+
+Channels
+  - channel holds one element at a time
+  - channels are 1st class values(channels can be passed as arguments and returned from functions)
+  - using channels with goroutines is THE MOST interesting feature in Go, there are many resources that show multiple concurrency patterns that utilize those feaures, see concurrency-patterns.txt
+  - channels are used for communication, and they automatically handle synchronization (you usually won't need locks, comlex sync mechanisms..etc)
+  - both sending & receiving through a channel are blocking
+    - sender blocks until some receiver takes that msg
+    - receiver blocks until some sender sends a msg, OR the channel is closed.
+    - receiving operation returns 2 values, 1st is the received value, 2nd is channel-open flag -> if channel is closed it will be false and the received value will be the zero value
+  - you can query channel capacity with cap(ch), and channel current length using len(ch) // IMPORTANT
+  - channel buffers
+    - buffers allow more than one msg to be queued in the channel which prevents early blocking of the senders
+    - this is useful when the transmission rate is higher than the receiving rate 
+    - blocks will happen after the buffer n is full (the n + 1 msg blocks), so buffer size is a tuning parameter (transmission vs memory)
+    - ex: msgs are being transmitted through the channel every second and there is only one receiver that processes one msg off the buffer every 2 seconds
+  - channels can be used for just signaling (synchronization only), in this case send empty struct{} variables, because they don't take memory
+  - closing channels
+    - The Channel Closing Principle: don't close a channel from the receiver side and don't close a channel if the channel has multiple concurrent senders
+    - if only the receiver knows when to end, make it send a quit signal to the sender, and then the sender should close 
+    - sometimes, we might want to close channels in defers
+    - If you would close a channel from the receiver side or in one of the multiple senders of the channel anyway, then you can use the recover mechanism 
+      to prevent the possible panic from crashing your program. 
+    - rude safe close (using defer) // rude because the receiver closes it
+      func SafeClose(ch chan T) (justClosed bool) {
+        defer func() {
+          if recover() != nil { //  = a panic happened
+            justClosed = false  // false means the channel is already closed
+          }
+        }()
+        close(ch)  // if already closed, will panic 
+        justClosed = true       // true means the channel has just been closed
+        return 
+      }
+    - graceful closing <---------- VERY VERY IMPORTANT  !!!  // see functions in channels/main.go
+      - 1: M receivers, one sender, the sender says "no more sends" by closing the data channel
+      - 2: One receiver, N senders, the only receiver says "please stop sending more" by CLOSING an additional signal channel
+      - 3: M receivers, N senders, any one of them says "let's end the game" by notifying a moderator to close an additional signal channel
+  - disadvantages
+    - u can create deadlocks with channels 
+    - channels pass around copies, which can impact performance
+    - passing pointers to channels can cause race conditions
+  - channel operations
+    - send, receive, close, set to nil, len, cap
+    +------------------+--------------+-----------------+-------------------------------+
+    |     Operation    | A Nil Channel|	A Closed Channel| A Not-Closed Non-Nil Channel  |
+    +==================+==============+=================+===============================+
+    |Close 	           |panic 	      | panic 	        |succeed to close (C)           |
+    +------------------+--------------+-----------------+-------------------------------+
+    |Send Value To 	   |block for ever| panic 	        |block or succeed to send (B)   |
+    +------------------+--------------+-----------------+-------------------------------+
+    |Receive Value From|block for ever| never block (D) |block or succeed to receive (A)|
+    +------------------+--------------+-----------------+-------------------------------+
+    - notes:
+      - Setting a channel variable to nil simply sets the variable to nil, while leaving the channel it had previously referred to initialized.
+        If there are other references to the channel, you could still access it. If there are not, it will be garbage collected.
+  - timeout technique:
+    - time.After(duration)            // returns a channel 
+    - <-time.After(duration)     // this will block until a signal is sent over the channel after `duration` amount of time
+  
+
+select
+  - select acts like a switch
+  - select looks at multiple channel at once and receives from whoever is buffered or ready to communicate
+  - behaviors
+    - if there is a default case (NOT-BLOCKING): if no case has a ready/closed channel(meaning it's open but can't send/receive), it will execute the default case and jump out of the select
+    - if there isn't a default case(BLOCKING): if no case has a ready/closed channel(meaning it's open but can't send/receive), it will BLOCK until a channel is ready OR got closed, and only after that, it can jump out of the select
+    - a ready channel(for sending or receiving) AND a closed channel can both satisfy the same select case, and will cause execution of code after `:`
+    - if select is wrapped by a for, unlike if/switch, a break statement would only break out of the select, not the wrapping for. to do that use break label 
+  - A select block with one default branch and only one case branch is called a try-send or try-receive channel operation, 
+    depending on whether the channel operation following the case keyword is a channel send or receive operation. 
+    - If the operation following the case keyword is a send operation, then the select block is called as try-send operation. 
+      If the send operation would block, then the default branch will get executed (fail to send), otherwise, the send succeeds and the only case branch will get executed.
+    - If the operation following the case keyword is a receive operation, then the select block is called as try-receive operation. 
+      If the receive operation would block, then the default branch will get executed (fail to receive), otherwise, the receive succeeds and the only case branch will get executed.
+    - Try-send and try-receive operations never block (because of the default case) <--- VERY IMPORTANT
+    - The standard Go compiler makes special optimizations for try-send and try-receive select blocks, their execution efficiencies are much higher than multi-case select blocks. 
+  - breaking out of select
+    - when you get a signal, break label (NOTE: this will break whether mainChannel got drained or not)
+      Br:
+        for {
+          select {
+          case msg := <- mainChannel: ....
+          case <- doneChannel: break Br;
+          }
+        }
+    - How to break when all receive channels are closed? 
+      if all channels are closed, nil-&-check (NOTE: this guarantees that all channels are drained AND closed)
+      for {
+        select{
+        case msg, ok := <-input1: if !ok {input1 = nil} 
+        case msg, ok := <-input2: if !ok {input2 = nil}
+        }
+        if input1 == nil && input2 == nil {break}
+      }
+  - NOTE: if you put a select on a for{}... you usually shouldn't use default, because it will BUSY WAIT -> CPU cycles wasted
+
+
+for-range 
+  - The loop will try to iteratively receive the values sent to a channel, UNTIL the channel is closed AND its value buffer queue becomes blank (it will drain it itself).
+  - Unlike the for-range syntax on arrays, slices and maps, most one iteration variable, which is used to store the received values, is allowed to be present in the for-range syntax on channels.
+  - both of the following snippets are equivalent
+    - for v = range aChannel {
+        // use v
+      }
+    - for {
+        v, ok = <-aChannel
+        if !ok {break}
+        // use v
+      }
+
+select vs forrange
+  - If you want to only RECEIVE from one channel and block until closed, use forrange.
+  - If you need more control, maybe over more than 1 channel, use for & select
+    
+Signaling
+  - channels can be used for signaling 
+  - var doneChannel = make(chan struct{}) // signal only channel
+  - struct{} requires 0 memory allocation, that makes it good choice for signaling
+ 
+Shortcomings
+  - using channels and goroutines alone may sometimes be NOT enough
+  - consider using sync package: Mutex, RWMutex, Waitgroups...etc
+  - even more, use sync.atomic: Store, Load, Swap, CompareAndSwap which all are thread-safe
+
+Dataflow-manipulation
+  - in dataflow-manipulation.txt, there are multiple modules that are used to control dataflow to for `pipelines`
+  - one of the challenges of this area is to gracefully handle channel closing 
+  - the modules outputs have one of 2 options:
+    - 1. caller pass output channels to the modules with the input channels.
+    - 2. modules create output channels from the inside and they only take the input channels from the caller.
+    - note: i think (not sure though) is that the 2nd way is better (except division/fanout case) becaues it lets you create self-close channels
+
+General notes:
+  - Always have a good strategy for gracefully ending goroutines, otherwise you may suffer from memory leaks
+  - use -race flag when using `go run` command, it will help finding race conditions
+  - sometimes, using channels doesn't make sense. and using mutexes make much much sense, like accessing a cache. a cache is a something that is made so that all goroutines consult it.
+    the messaging pattern of channels doesn't make sense in that case even if it can be utilized to do the job -> it would just look not intuitive
+    

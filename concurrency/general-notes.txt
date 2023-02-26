@@ -1,0 +1,22 @@
+Concurrency:
+    - Matt definition: Parts of the program may execute independently in some non-deterministic (partial) order
+        - independently: procs are co-routines that are forked from main program but they can live on their own afterwards and potentially run at the same time of main program, unlike sub-routines switch context back and forth with the main program
+        - partial ex: a -> {c, b} -> d // c and b can be executed in any order, but together they happen after a and before d
+        - non-deterministic: the order of execution of the concurrent parts is not known in advance
+    - Problems = Sharing state between coroutines
+    - Solutions:
+        - Don't share state
+        - Make shared state immutable(read-only) 
+        - Allow only one writer to shared state at a time (synchronization) -> reducing concurrency
+        - Atomize operations on shared state (atomicity) -> reducing concurrency
+
+ 
+ CSP (Communicating Sequential Processes):
+    - A model for concurrent computation
+    - provides a model for thinking about concurrent concurrency that makes it easier to reason about
+    - a process is a concurrent unit of computation that communicates by message passing
+    - a process can be in one of three states: ready, waiting, or terminated-
+        - take the program apart and make the pieces talk to each other
+    - "Go doesn't force developers to embrace the asynchronous ways of event-driven programming. That let's 
+       you write asynchronous code in a s synchronous way style." - Andrew Gerrand
+       

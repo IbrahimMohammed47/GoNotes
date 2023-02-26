@@ -1,0 +1,56 @@
+Abstraction
+    - Decoupling behavior from implementation details
+    - Ex: Unix file system API (open,close,read,write,ioctl)
+Encapsulation
+    - Hiding implementation details from misuse
+    - User doesn't need to know how it works, and can't depend on any internal details
+    - A way to help maintain abstraction
+Polymorphism
+    - Usual Types:
+        - Adhoc: function/operator overloading
+        - Parametric: generics
+        - Subtyping: subclasses substituting for superclasses
+    - New type:
+        - Protocol-oriented programming
+            - Used explicit interface types  
+            - behavior is completely separate from implementation -> good abstraction
+Inheritence
+    - conflicting meanings?
+        1. substitution (subtyping) polymorphism (subclass can substitute for superclass) <- That's good
+        2. structural sharing of implementation details (subclass can see the inners of superclass) <- Go thinks this is bad (at least because of misuse)
+            - example problems:
+                - what if superclass changes behavior
+                - very easy to do bad design (ex: is line a shape? but it doesn't have area) -> bad designs can easily propagate
+            - That's why you hear "composition over inheritence" everywhere
+    - "Object-oriented programming to me means only messaging, local retention and protection and hiding of state-process, and extreme late-binding of all things." - Alan Kay
+    - "Inheritance is a mechanism for code reuse. It is not  a mechanism for code sharing." - Robert C. Martin
+    - So.. It's about messaging between self-contained objects -> classical inheritence can blow this meaning up very fast
+    - And if we throw inheritence away, we need to find ways to do substitution and code sharing:
+        - Substitution -> interface types
+        - Code sharing -> composition 
+OOP in Go
+    - OOP
+        - encapsulation using package for visibility control (with uppercase and lowercase semantics)
+        - abstraction & polymorphism using interface types NOT through subtypes
+        - enhanced composition to provide structure sharing
+    - Go doesn't offer inheritance or substituitability based on types
+    - Go offers substituitability based on interfaces
+    
+    - Structs, interfaces, and functions (no classes)
+    - Methods can be defined on any user-defined type(not just structs ), rather than just classes
+    
+    - Go Interfaces in practice
+        1. Let consumers define interfaces (not providers like in Java)
+            - that's why you there is no "implements" keyword in Go
+        2. Re-use standard interfaces whenever possible
+            - that maximizes your code compatibility
+        3. Keep interface declarations small
+            - The bigger the interface, the weaker the abstraction
+        4. Compose one-method interfaces into larger interfaces (if needed)
+        5. Avoid coupling interfaces to particular types/implementation
+            - so it get more abstract -> more useful/reusable
+        6. Accept interfaces, but return concrete types (in most cases)
+            - Let the consumer pass any concrete type they want as long as it satisfies the interface
+            - Let the consumer of the return type decide how to use it, returning concrete type does that. returning interface makes consumer tied to a smaller set of methods of the returned object
+            - Be liberal in what you accept, but conservative in what you return 
+            - exception example: Returning error "the interface"
