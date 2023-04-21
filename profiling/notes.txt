@@ -1,0 +1,38 @@
+
+Checking leaking Goroutines:
+    1. via pprof
+        - install pprof package
+        - run server
+        - send some load (cover all routes)
+        - check "goroutines" sections on /debug/pprof endpoint from the browser
+        - if the number of goroutines is going up and up without decreasing -> Memory leak, the stack trace of each goroutine can help find where leak happens 
+
+    2. via prometheus
+        - install prometheus package
+        - run server
+        - send some load (cover all routes)
+        - check /metrics endpoint
+        - monitor number of fds (file descriptors) and if they go up with goroutines count -> Memory leak
+
+Profiling
+    - via pprof
+        - install pprof package
+        - build server -> server.out
+        - run server
+        - start profiling on /debug/pprof/profile endpoint
+        - send some load (cover all routes)
+        - once profiling finishes copy `profile` to be next to the binary
+        - run `go tool pprof -http=":6060" server.out profile`
+        - check localhost:6060
+
+Static Analysis tools examples:
+    - goimports // does general checks
+    - govet     // more error-prone code checks
+    - gosec     // security checks
+    - gocyclo   // reports high cyclometric complexity in functions
+    - deadcode  // reports dead code
+    -- Run all of them ---> golangci-lint
+                                - can be configured with .golangci.yml
+                                - can be hooked in CI/CD pipeline or locally
+                                - issues must be fixed for build to pass 
+                                - false positivescan can be marked with //nolint

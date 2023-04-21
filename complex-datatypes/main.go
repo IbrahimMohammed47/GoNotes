@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 )
 
@@ -257,25 +256,46 @@ func main() {
 
 	////// Structs tags
 	//// tags are used to add metadata to struct fields, ex: they are used by encoding/json package to encode/decode json
-	type user struct {
-		Name string `json:"name"`
-		Age  int    `json:"age,omitempty"`
-	}
-	u1 := user{
-		Name: "Tracy",
-		Age:  10,
-	}
-	u2 := user{
-		Name: "X",
-	}
-	fmt.Printf("%#v\n", u1)
-	fmt.Printf("%#v\n", u2)
-	j1, _ := json.Marshal(u1)
-	fmt.Println(string(j1))
-	j2, _ := json.Marshal(u2)
-	fmt.Println(string(j2))
+	// type user struct {
+	// 	Name string `json:"name"`
+	// 	Age  int    `json:"age,omitempty"`
+	// }
+	// u1 := user{
+	// 	Name: "Tracy",
+	// 	Age:  10,
+	// }
+	// u2 := user{
+	// 	Name: "X",
+	// }
+	// fmt.Printf("%#v\n", u1)
+	// fmt.Printf("%#v\n", u2)
+	// j1, _ := json.Marshal(u1)
+	// fmt.Println(string(j1))
+	// j2, _ := json.Marshal(u2)
+	// fmt.Println(string(j2))
 
-	var v1 user
-	json.Unmarshal(j1, &v1)
-	fmt.Printf("%#v\n", v1)
+	// var v1 user
+	// json.Unmarshal(j1, &v1)
+	// fmt.Printf("%#v\n", v1)
+
+	//// Enum types
+	const (
+		tennis int = iota
+		basketball
+		volleyball
+		baseball
+	)
+	const (
+		jack int = iota % 2 // it can be an expression !!!
+		jane
+		joe
+		jenny
+	)
+	const (
+		twoPower0 int = 1 << iota
+		twoPower1
+		twoPower2
+		twoPower3
+	)
+	fmt.Println(tennis, basketball, volleyball, baseball)
 }

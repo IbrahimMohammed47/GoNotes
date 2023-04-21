@@ -1,0 +1,27 @@
+
+Generics (Go 1.18):
+    - Details
+        - Type parameters for functions and types
+            - Instantiation
+                1. Substitute type arguments (ex:int) for type parameters (ex:T)
+                2. Check that type arguments implement their constraints (If this step fails -> Instantiation fails)
+            - examples             
+        - Type sets defined by interfaces
+            - sets of types (a.k.a type constraints) are used like this:
+                type Ordered interface {
+                    Integer | Float | ~string
+                }
+                type Integer interface {
+                    Signed | Unsigned
+                }
+                type Signed interface {
+                    ~int | ~int8 | ~int16 | ~int32 | ~int64
+                }
+                - `|` means union of types
+                - `~T` means the set of all types with underlying type T
+        - Type inference    
+            - Type arguemnts can be omitted and compiler will infer the type of the function/type data arguments
+    - When to use generics
+        - Functions that work on slices, maps, and channels of any element type. and those functions don't make very specific assumptions about the type of the elements
+        - General purpose data structures (e.g. trees, linkedlists, ...etx)
+        - When a method looks the same for all types

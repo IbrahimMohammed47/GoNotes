@@ -31,6 +31,11 @@ func main() {
 	// }
 	// nums("James", 99, 100)
 
+	//// variadic functions (pack/unpack operator)
+	// fmt.Println(sum(1, 2, 3, 4)) // arguments are collected into a slice
+	// l := []int{1, 2, 3, 4}
+	// fmt.Println(sum(l...)) //
+
 	//// Anonymous Functions
 	// func() { // IIFE
 	// 	fmt.Println("Greeting")
@@ -76,12 +81,12 @@ func main() {
 	// defer fmt.Println("i will run anyway")	// note any defers are guaranteed to run BEFORE panic panics
 	// panic("something is wrong...")
 
-	//// recover allows a program to manage behavior of a panicking goroutine. the return value from recover reports whether the goroutine is panicking or not. 
+	//// recover allows a program to manage behavior of a panicking goroutine. the return value from recover reports whether the goroutine is panicking or not.
 	//// panic is usually called in a defered execution
 	///  It's somehow similar to catching an exception
-	fmt.Println("start")
-	panicker()
-	fmt.Println("end")
+	// fmt.Println("start")
+	// panicker()
+	// fmt.Println("end")
 }
 
 // /// it is idiomatic in Go for the second return type to be of type error
@@ -126,4 +131,13 @@ func panicker() {
 		}
 	}()
 	panic("\"i want to panic now, but before that let's execute the stacked defers\"")
+}
+
+// variable length parameters (a slice)
+func sum(nums ...int) int {
+	total := 0
+	for _, num := range nums {
+		total += num
+	}
+	return total
 }

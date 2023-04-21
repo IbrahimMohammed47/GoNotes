@@ -1,0 +1,9 @@
+Go encourages good design:
+    - to allocate contiguously
+    - to copy or not to copy (cost of copying vs cost of pointer chasing)
+    - to allocate on the stack or heap (sometimes)
+    - to be synchronous or asynchronous
+    - to avoid unnecessary abstraction layers (ex: long chain of function calls)
+    - to avoid short / forwarding methods
+Go doesn't get between you and the machine (Mechanical Sympathy)
+Good code in Go doesn't hide the costs involved

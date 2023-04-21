@@ -1,0 +1,32 @@
+#1: Race conditions, where unprotected read & writes overlap
+    - must be some data that is written to
+    - could be a read-modify-write operation
+    - two goroutines can do it at the same time
+
+#2: Deadlock, when no goroutine can make progress
+    - goroutines could all be blocked on empty channels
+    - goroutines could all be blocked on a mutex
+    - GC could be prevented from running (busy loop)
+    + may be detected using --race flag
+
+#3: Goroutine Leak
+    - goroutine hangs on an empty or blocked channel
+    - not deadlock; other goroutines make progress
+    + often found by looking at pprof output
+    $ when you start a goroutine, ALWAYS know how/when it well end
+
+#4: Channel errors
+    - trying to send on a closed channel
+    - trying to send or receive on a nil channel
+    - closing a nil channel
+    - closing a channel twice
+
+#5: other errors
+    - closure capture -> like loop variables capturing, use parameters to guarantee oredering
+    - misuse of Mutex
+    - misuse of WaitGroup -> always Add BEFORE starting unit of work/bedore even calling the function that doesn wg.Done()
+    - misuse of select
+        - default is always active
+        - a nil channel is always ignored
+        - a full channel (for send) is skipped over, just like receiving from an empty channel
+        - available channels are selected at RANDOM 

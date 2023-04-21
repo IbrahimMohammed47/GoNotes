@@ -1,0 +1,10 @@
+
+Testing
+    - Testing is not about running "acceptance" tests to show that things work
+    - It's about surfacing defects by causing  the system to fail (breaking it)
+    - The wrong testing mindset leads to inadequate testing
+
+Code Coverage
+    - Commands Example:
+        - go test ./linkparser/ -coverprofile=c.out -covermode=count 
+        - go tool cover -html=c.out

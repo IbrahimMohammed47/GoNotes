@@ -1,0 +1,48 @@
+Go Module support is intended to solve several problems:
+    - avoid the need for $GOPATH
+    - group packages versioned/released together
+    - support semantic versioning & backwards compatibility
+    - provide in-project dependency management
+    - offer strong dependency security & availability
+    - continue support of vendoring
+    - work transparently across the Go ecosystem
+
+Go modules with proxying offers the value of vendoring without requiring your project to vendor all the 3rd-party code in your repo
+
+Go's dependency mngt protects against some risks:
+    - flaky repos
+    - packages that disappear
+    - conflicting dependency versions
+    - surreptitious changes to public packages 
+
+But it cannot ensure the actual quality or security of the original code; see
+    - Reflections on Trusting Trust by Ken Thompson
+    - Our Software Dependency Problem by Russ Cox
+
+Go Module controle files:
+    - go.mod
+        - contains module name, go version, and direct dependencies
+    - go.sum
+        - has checksums for all transitive dependencies
+
+Relevant Env vars:
+    - GOPROXY (usually use default)
+    - GOSUMDB (usually use default)
+    - GOPRIVATE (need to set for private dependencies repos)
+    - GONOSUMDB (need to set for private dependencies repos)
+
+Maintaining Dependencies:
+    - Starting a project
+        - go mod init <module-name> # create the go.mod file
+        - go get <package-repo>     # install package and updates go.mod 
+    - Once a version is set, Go will not update it automatically; you can 
+    update every dependency with
+        - go get -u ./...           # update transitively
+        - go mod tidy               # remove unneeded modules
+    - You must commit the go.mod and go.sum files in your repo
+
+Vendoring and the local cache
+    - Use `go mod vendor` to create the vendor directory; it must be in the modules's root directory (along with go.mod)
+    - This is like node_modules in npm
+    - When vendoring is enabled, build commands like go build and go test load packages from the vendor directory instead of accessing the network or the local module cache
+    - https://go.dev/ref/mod#vendoring

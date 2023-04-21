@@ -1,4 +1,4 @@
-Concurrency:
+Concurrency generals:
     - Matt definition: Parts of the program may execute independently in some non-deterministic (partial) order
         - independently: procs are co-routines that are forked from main program but they can live on their own afterwards and potentially run at the same time of main program, unlike sub-routines switch context back and forth with the main program
         - partial ex: a -> {c, b} -> d // c and b can be executed in any order, but together they happen after a and before d
@@ -20,3 +20,8 @@ Concurrency:
     - "Go doesn't force developers to embrace the asynchronous ways of event-driven programming. That let's 
        you write asynchronous code in a s synchronous way style." - Andrew Gerrand
        
+Concurrency notes:
+    - give goroutines = tasks, for CPU-bound work. give much more goroutines for IO-bound tasks
+    - We don't need to limit the number of goroutines (if we are not handling known number of limited CPU tasks)
+    - We need to limit contention for shared resources (ex: disk access)
+    

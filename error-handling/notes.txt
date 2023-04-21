@@ -1,0 +1,45 @@
+- Error Types:-
+    1. Normal Errors
+        - They result from input or external conditions, IO, etc (ex: file not found)
+        - Go handles this case by RETURNING the error type
+    2. Abnormal Errors
+        - They result from invalid program logic (ex: division by zero, nil pointer, array index out of range)
+        - Go handles this case by PANICING 
+
+- Dealing with logic bugs
+    - If your server crashes, it will get immediate attention
+        - logs are often noisy
+        - so proactive log searches for "problems" are rare
+    - We want evidence of the failure as close in time and space as possible to the original defect in code
+        - connect the crash logs that explain the context
+        - trace back from the point closest to the broken logic
+    - In distributed systems, crash failures are the safest type to handle
+        - It's better to die than to be a zombie or corrupt the DB
+        - Not crashing may lead to Byzantine failures
+
+- When should we use panic:
+    Only when the error was caused by our own programming defect, e.g.
+        - We can't walk a datastructure we built
+        - we have an off-by-one bug encoding bytes
+    In other words:
+        panic should be used when our assumptions of our own programming design or logic are WRONG (panic instead of breaking constraints)
+    These cases might use an "assert" in other programming languages
+
+- Exception Handling
+    - Exception handling was popularized to allow "graceful degradation" of safety-critical systems
+    - Ironically, most safety-critical systems are built without using exceptions
+    - Exception handling introduces INVISIBLE control paths through code
+    - So code with exceptions is harder to analyze (automatically or by eye)
+
+    - Officially, Go doesn't support exception handling
+    - Practically, it does through panic & recover -> But it smells, just try NOT to use it 
+
+- Proactively preventing Errors
+    - Break large problems into small pieces you can understand
+    - hide information to reduce the chance of corruption
+    - avoid clever code and side effects
+    - avoid unsafe operations
+    - assert your invariants
+    - never ignore errors
+    - test, test, test
+    - never accept input from user(or environment) without validation
